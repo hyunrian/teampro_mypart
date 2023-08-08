@@ -4,10 +4,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>DirEngine - Free Bootstrap 4 Template by Colorlib</title>
+<title>우리가 만들어가는 부산여행 추천 코스</title>
 <meta charset="utf-8">
 <meta name="viewport"
 	content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- fontawesome 설정 추가 -->
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css"
+	integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ"
+	crossorigin="anonymous">
+<script src="https://kit.fontawesome.com/77ad8525ff.js" crossorigin="anonymous"></script>
 
 <link
 	href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700"
@@ -80,49 +86,53 @@ body {
 						<span>혼자만 알고 있기 아쉬운 다양한 코스를 다른 사람들과 공유해보세요!</span>
 					</p>
 					<br>
-					<button type="button" class="btn btn-lg" 
+					<a class="btn btn-lg" href="/userboard/write" 
 						style="background-color:#78d5ef; color:white;">
 						나의 여행 코스 등록하기
-					</button>
+					</a>
 				</div>
 			</div>
 		</div>
 	</div>
 	
-	<c:forEach var="userBoardVo" items="${userArticleList}">
 		<section class="ftco-section bg-light">
 			<div class="container">
 				<div class="row d-flex">
-					<div class="col-md-3 d-flex ftco-animate">
-						<div class="blog-entry align-self-stretch">
-							<a href="/resources/blog-single.html" class="block-20"
-								style="background-image: url('/resources/images/image_1.jpg');">
-							</a>
-							<div class="text p-4 d-block">
-								<span class="tag">태그 표시</span>
-								<h3 class="heading mt-3">
-									<a href="#">${userBoardVo.title}</a>
-								</h3>
-								<div class="meta mb-3">
-									<div>
-										<a href="#">August 12, 2018</a>
-									</div>
-									<div>
-										<a href="#">Admin</a>
-									</div>
-									<div>
-										<a href="#" class="meta-chat"><span class="icon-chat"></span>
-											3</a>
+					<c:forEach var="userBoardVo" items="${userArticleList}">
+						<div class="col-md-3 d-flex ftco-animate">
+							<div class="blog-entry align-self-stretch">
+								<a href="/userboard/detail?bno=${userBoardVo.bno}" class="block-20"
+									style="background-image: url('/resources/images/image_1.jpg');">
+								</a>
+								<div class="text p-4 d-block">
+									<h3 class="heading mt-3">
+										<a href="#">${userBoardVo.title}</a>
+									</h3>
+									<div class="meta mb-3">
+										<div>
+											<a href="#">${userBoardVo.writer}</a>
+										</div>
+										<br>
+										<div class="boardContents" style="margin-right: 40px; margin-left:15px;">
+											<a href="#" class="meta-chat"><i class="fa-regular fa-eye"></i>
+												${userBoardVo.viewcnt}</a>
+										</div>
+										<div class="boardContents" style="margin-right: 40px;">
+											<a href="#" class="meta-chat"><i class="fa-solid fa-heart"></i>
+												0</a>
+										</div>
+										<div class="boardContents">
+											<a href="#" class="meta-chat"><span class="icon-chat"></span>
+												${userBoardVo.replycnt}</a>
+										</div>
 									</div>
 								</div>
 							</div>
 						</div>
-					</div>
+					</c:forEach>
 				</div>
 			</div>
 		</section>
-	</c:forEach>
-	<div>${userArticleList}</div>
 	
 	<section class="ftco-section bg-light">
 		<div class="container">
@@ -354,6 +364,7 @@ body {
 		</div>
 	</section>
 
+	<!-- 상단으로 이동 버튼 -->
 	<a href="#top"> <img alt="맨 위로 이동"
 		src="/resources/images/myicons/up-arrow.png" id="pageUp">
 	</a>
