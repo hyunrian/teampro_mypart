@@ -50,59 +50,69 @@ $(function() {
 	location.href="/userboard/detail?bno=${userBoardVo.bno}#pageBegin";
 	
 	// 좋아요
-	let heartStatus = "off";
-	let heartCount = parseInt($("#heartCount").text());
+	const sData = {
+			"unickname" : "tester", // 나중에 session에 넣은 loginInfo로 수정 필요
+			"bno" : "${userBoardVo.bno}"
+	}
+	
+	// 페이지 로딩 시 하트 처리
+	$.get("/like/liked", sData, function(rData) {
+		console.log("loaded");
+		console.log("rData:", rData);
+		if (rData) {
+			console.log("true");
+			getFullHeart();
+		} else {
+			console.log("false");
+			getEmptyHeart();
+		}
+	});
+	
+	// 페이지 로딩 시 좋아요 개수 처리
+	$.get("/like/count/${userBoardVo.bno}", function(rData) {
+		$("#heartCount").text(rData);
+	});
 	
 	$("#heart").click(function() {
-		
-		let sData = {
-				"unickname" : "tester", // 나중에 session에 넣은 loginInfo로 수정 필요
-				"bno" : "${userBoardVo.bno}"
-		}
-		
 		$.get("/like/liked", sData, function(rData) {
-			if (rData == true) { // 사용자가 해당 글을 이미 좋아요한 경우
+			const heartCount = parseInt($("#heartCount").text());
+			if (rData) { // 사용자가 해당 글을 이미 좋아요한 경우
 				$.ajax({
 					"type" : "delete",
 					"url" : "/like/cancel/${userBoardVo.bno}/tester",
 					"success" : function(rData) {
-						console.log("ajax - rData:", rData);
-						// 좋아요 기능구현 완료. view 부분부터 다시 작성하면 됨
+						getEmptyHeart();
+			 			$("#heartCount").text(heartCount -1);
 					}
 				});
 			} else { // 사용자가 해당 글을 아직 좋아요하지 않은 경우
 				$.post("/like/add", sData, function(rData) {
-					console.log("post - rData:", rData);
+					getFullHeart();
+		 			$("#heartCount").text(heartCount + 1);
 				});
-				
 			}
 		});
 		
-// 		$.post("/like/add", sData, function(rData) {
-// 			if (rData == "SUCCESS") {
-				
-// 			}
-// 		});
-// 		if (heartStatus == "off") {
-// 			$("#heartEmpty").hide();
-// 			$("#heartFull").show();
-// 			heartStatus = "on";
-// 			$("#heartCount").text(heartCount + 1);
-// 		} else if(heartStatus == "on") {
-// 			$("#heartFull").hide();
-// 			$("#heartEmpty").show();
-// 			heartStatus = "off";
-// 			$("#heartCount").text(heartCount - 1);
-// 		}
 	});
+	
+	// 가득 찬 하트로 변경하기
+	function getFullHeart() {
+		$("#heartEmpty").hide();
+		$("#heartFull").show();
+	}
+	// 빈 하트로 변경하기
+	function getEmptyHeart() {
+		$("#heartFull").hide();
+		$("#heartEmpty").show();
+	}
 	
 	// 댓글 가져오기
 	function getReplyList() {
 		
 		$.get("/userReply/list?bno=${userBoardVo.bno}", function(rData) {
 			$.each(rData, function(i, item) {
-				let li = $("#replyLi").clone();
-				let div = li.find("div").eq(1);
+				const li = $("#replyLi").clone();
+				const div = li.find("div").eq(1);
 				div.find("h3").text(rData[i].replyer);
 				
 				// 작성일 또는 수정일이 오늘 날짜인 경우 시간으로 출력, 그렇지 않은 경우 날짜로 출력
@@ -181,7 +191,7 @@ $(function() {
 					</span>
 				</div>
 				<div class="parent">
-					<span class="badge badge-light" style="font-size: 10pt;" id="heartCount">3</span>
+					<span class="badge badge-light" style="font-size: 10pt;" id="heartCount"></span>
 					<span class="badge badge-light" style="font-size: 10pt;" id="shareText">Share</span>
 				</div><br>
 
