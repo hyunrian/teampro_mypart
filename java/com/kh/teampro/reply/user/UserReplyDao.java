@@ -1,6 +1,8 @@
 package com.kh.teampro.reply.user;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +22,19 @@ public class UserReplyDao {
 		else return null;
 	}
 	
-	public void insertUserReply(UserReplyVo userReplyVo) {
-		sqlSession.insert(NAMESPACE + "insertUserReply", userReplyVo);
+	public void insertUserNewReply(UserReplyVo userReplyVo) {
+		sqlSession.insert(NAMESPACE + "insertUserNewReply", userReplyVo);
+	}
+	
+	public void insertUserReReply(UserReplyVo userReplyVo) {
+		sqlSession.insert(NAMESPACE + "insertUserReReply", userReplyVo);
+	}
+	
+	public int getMaxRseq(int bno, int rgroup) {
+		Map<String, Integer> map = new HashMap<>();
+		map.put("bno", bno);
+		map.put("rgroup", rgroup);
+		return sqlSession.selectOne(NAMESPACE + "getMaxRseq", map);
 	}
 	
 	public int getReplycnt(int bno) {

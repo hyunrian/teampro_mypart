@@ -47,7 +47,6 @@ public class UserBoardController {
 	}
 	
 	// 유저 게시글 내용 보기
-	@Transactional
 	@RequestMapping(value = "/detail", method = RequestMethod.GET)
 	public String getDetail(int bno, Model model) {
 

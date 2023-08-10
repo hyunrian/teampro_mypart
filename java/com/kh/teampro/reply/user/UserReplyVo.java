@@ -20,6 +20,7 @@ public class UserReplyVo {
 	private Timestamp regdate;
 	private Timestamp updatedate;
 	private int rgroup;
+	private int rseq;
 	private int rlevel;
 	private String delete_yn;
 	

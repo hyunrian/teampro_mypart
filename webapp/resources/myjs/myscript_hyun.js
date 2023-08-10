@@ -43,8 +43,6 @@ function make2digits(num) {
 function isSameDate(millisecond) {
 	let today = getDate(new Date());
 	let thatday = getDate(new Date(millisecond));
-	console.log("today", today);
-	console.log("thatday", thatday);
 	if (today == thatday) return true;
 	else return false;
 }

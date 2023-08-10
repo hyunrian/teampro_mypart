@@ -2,6 +2,33 @@
 	pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ include file="/WEB-INF/views/include/header.jsp" %>
+<!-- Bootstrap4 설정 추가 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- toastr 추가 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.css" integrity="sha512-3pIirOrwegjM6erE5gPSwkUzO+3cTjpnV9lexlNZqvupR64iZBnOOTiiLPb9M36zpMScbmUNIcHUqKD47M719g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" integrity="sha512-VEd+nq25CkR676O+pLBnDW09R7VQX9Mdiij052gVCp5yVH3jGtH70Ho/UUv4mJDsEdTvqRCFZg0NKGiojGnUCw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+toastr.options = {
+	"closeButton": false,
+	"debug": false,
+	"newestOnTop": false,
+	"positionClass": "toast-bottom-right",
+	"preventDuplicates": false,
+	"onclick": null,
+	"showDuration": "100",
+	"hideDuration": "100",
+	"timeOut": "1200",
+	"extendedTimeOut": "1200",
+	"showEasing": "swing",
+	"hideEasing": "linear",
+	"showMethod": "fadeIn",
+	"hideMethod": "fadeOut"
+}
+</script>
 <style>
 	.parent {
 	  position: relative;
@@ -41,35 +68,32 @@
 		transform: translate(-50%, -50%);
 		margin-top: 40px;
 	}
+	
+	.reply {
+		padding-top: 0px;
+	}
+
 </style>
 <script>
 $(function() {
-	
-	// 현재 페이지로 이동하면 자동 스크롤 이동
+	const bno = "${userBoardVo.bno}";
+	// 게시글 등록일 날짜 처리
 	$("#dateSpan").text(getDate("${userBoardVo.regdate}"));
-	location.href="/userboard/detail?bno=${userBoardVo.bno}#pageBegin";
 	
 	// 좋아요
 	const sData = {
 			"unickname" : "tester", // 나중에 session에 넣은 loginInfo로 수정 필요
-			"bno" : "${userBoardVo.bno}"
+			"bno" : bno
 	}
 	
 	// 페이지 로딩 시 하트 처리
 	$.get("/like/liked", sData, function(rData) {
-		console.log("loaded");
-		console.log("rData:", rData);
-		if (rData) {
-			console.log("true");
-			getFullHeart();
-		} else {
-			console.log("false");
-			getEmptyHeart();
-		}
+		if (rData) getFullHeart();
+		else getEmptyHeart();
 	});
 	
 	// 페이지 로딩 시 좋아요 개수 처리
-	$.get("/like/count/${userBoardVo.bno}", function(rData) {
+	$.get("/like/count/" + bno, function(rData) {
 		$("#heartCount").text(rData);
 	});
 	
@@ -79,7 +103,7 @@ $(function() {
 			if (rData) { // 사용자가 해당 글을 이미 좋아요한 경우
 				$.ajax({
 					"type" : "delete",
-					"url" : "/like/cancel/${userBoardVo.bno}/tester",
+					"url" : "/like/cancel/" + bno + "/tester",
 					"success" : function(rData) {
 						getEmptyHeart();
 			 			$("#heartCount").text(heartCount -1);
@@ -106,29 +130,101 @@ $(function() {
 		$("#heartEmpty").show();
 	}
 	
+	// 공유하기 (클립보드에 링크 복사)
+	$("#share").click(function() {
+		console.log("url:", document.location.href);
+		const url = document.location.href;
+		window.navigator.clipboard.writeText(url).then(() => {
+			console.log("copied");
+			toastr.success("링크가 복사되었습니다.");
+		});
+
+		// window 공유하기 기능
+// 		const shareObject = {
+// 		    title: "${userBoardVo.title}",
+// 		    text: "${userBoardVo.content}",
+// 		    url: window.location.href,
+// 		  };
+		
+// 		if (navigator.share) { // Navigator를 지원하는 경우만 실행
+// 			navigator.share(shareObject).then(() => {
+// 		        // 정상 동작할 경우 실행
+// 			})
+// 			.catch((error) => { // 에러일 때
+				
+// 			})
+// 		} else { // navigator를 지원하지 않는 경우
+			  
+// 		}
+		
+	});
+	
+	
 	// 댓글 가져오기
 	function getReplyList() {
 		
-		$.get("/userReply/list?bno=${userBoardVo.bno}", function(rData) {
+		$.get("/userReply/list?bno=" + bno, function(rData) {
+			$(".replyElem").remove();
 			$.each(rData, function(i, item) {
-				const li = $("#replyLi").clone();
-				const div = li.find("div").eq(1);
+				let reply = null;
+				if (rData[i].rlevel == 1)
+					reply = $("#reReplyUl").clone(); // rlevel이 1인 경우 들여쓰기 처리
+				else 
+					reply = $("#replyLi").clone();
+				
+				reply.removeAttr("id").addClass("replyElem");
+				
+				const div = reply.find("div").eq(1);
 				div.find("h3").text(rData[i].replyer);
 				
 				// 작성일 또는 수정일이 오늘 날짜인 경우 시간으로 출력, 그렇지 않은 경우 날짜로 출력
-				if (isSameDate(rData[i].regdate))
+				if (isSameDate(rData[i].regdate)) {
 					div.find("div").text(getTime(rData[i].regdate));
-				else 
+				} else { 
 					div.find("div").text(getDate(rData[i].regdate));
+				}
 				div.find("p").eq(0).text(rData[i].replytext);
-				li.show();
-				$("#replyUl").append(li);
+				
+				reply.show();
+				
+				$("#replyUl").append(reply);
 			});
 		});
 	}
 	
 	getReplyList();
 	
+	// 새 댓글 쓰기
+	$("#replyInsertBtn").click(function() {
+		const replytext = $("#replytext").val().trim();
+		if (replytext != null) {
+			const sData = {
+					"bno" : bno,
+					"replytext" : $("#replytext").val(),
+					"rlevel" : 0
+			};
+			$.post("/userReply/insert", sData, function(rData) {
+				if (rData == "SUCCESS") getReplyList();
+			});
+		}
+	});
+	
+	// 대댓글 쓰기
+	$("#replyUl").on("click", ".reply", function(e) {
+		e.preventDefault();
+		const replyForm = $("#replyForm2").clone();
+		replyForm.attr("style", "margin-top: 15px;");
+		replyForm.a
+		$(this).parent().append(replyForm);
+// 		const sData = {
+// 				"bno" : bno,
+// 				"replytext" : $("#replytext").val(),
+// 				"rlevel" : 0
+// 		};
+// 		$.post("/userReply/insert", sData, function(rData) {
+// 			if (rData == "SUCCESS") getReplyList();
+// 		});
+	});
 });
 </script>
 <%@ include file="/WEB-INF/views/include/menu.jsp" %>
@@ -151,7 +247,7 @@ $(function() {
 	</div>
 </div>
 
-<div id="pageBegin"></div>
+<div id="pageBegin"></div><br><br>
 <section class="ftco-section ftco-degree-bg">
 	<div class="container">
 		<div class="row">
@@ -179,26 +275,34 @@ $(function() {
 				
 				<!-- 게시글 좋아요, 공유하기 -->
 				<div class="parent">
-					<span id="heart" class="child">
+					<span id="heart">
 						<i class="fa-regular fa-heart clickable" style="color: #eb1414;"
 							id="heartEmpty"></i>
 						<i class="fa-solid fa-heart clickable" style="color: #eb1414;
 							display: none;" id="heartFull"></i>
 					</span>
-					<span id="share" class="child">
+					<span id="share">
 						<i class="fa-solid fa-square-share-nodes clickable" 
 							style="color: #5CD1E5;"></i>
 					</span>
+					
 				</div>
 				<div class="parent">
 					<span class="badge badge-light" style="font-size: 10pt;" id="heartCount"></span>
 					<span class="badge badge-light" style="font-size: 10pt;" id="shareText">Share</span>
-				</div><br>
+				</div>
 
 				<!-- 댓글 -->
+				<div class="tagcloud">
+					<a id="replyOpen" class="tag-cloud-link" 
+						style="font-size: 10pt; margin-top: 100px; cursor: pointer;">댓글 보기</a>
+				</div>
+<!-- 				<div class="pt-5 mt-5" style="display:none;"> -->
 				<div class="pt-5 mt-5">
 					<h3 class="mb-5">${userBoardVo.replycnt} Comments</h3>
-					<ul class="comment-list" id="replyUl" >
+					
+					<!-- 댓글목록 -->
+					<ul class="comment-list" id="replyUl" style="padding: 0px, 0px, 0px, 40px;">
 						<li class="comment" id="replyLi" style="display: none;"/>
 							<div class="vcard bio">
 								<img src="/resources/images/person_1.jpg"
@@ -209,39 +313,59 @@ $(function() {
 								<div class="meta" style="text-align: right;">날짜</div>
 								<p>내용</p>
 								<p>
-									<a href="#" class="reply">Reply</a>
+									<a href="hi" class="reply">Reply</a>
 								</p><br>
 							</div>
 						</li>
+						<ul class="children" id="reReplyUl" style="display: none;">
+							<li class="comment"/>
+								<div class="vcard bio">
+									<img src="/resources/images/person_1.jpg"
+										alt="Image placeholder">
+								</div>
+								<div class="comment-body">
+									<h3>작성자</h3>
+									<div class="meta" style="text-align: right;">날짜</div>
+									<p>내용</p>
+									<p>
+										<a href="#" class="reply">Reply</a>
+									</p><br>
+								</div>
+							</li>
+						</ul>
 					</ul>
-					<!-- END comment-list -->
+					
+					<!-- 댓글쓰기 -->
+<!-- 					<div class="comment-form-wrap pt-5" id="replyForm"> -->
+<!-- 						<h3 class="mb-5">Leave a comment</h3> -->
+<!-- 						<form action="#" class="p-5 bg-light" id="replyForm2"> -->
+<!-- 							<div class="form-group"> -->
+<!-- 								<input type="text" class="form-control" id="replytext" -->
+<!-- 									placeholder="내용을 입력하세요."> -->
+<!-- 							</div> -->
+<!-- 							<div class="form-group"> -->
+<!-- 								<input type="button" value="댓글 등록" id="replyInsertBtn" -->
+<!-- 									class="btn py-3 px-4 btn-primary" style="border: none;"> -->
+<!-- 							</div> -->
+<!-- 						</form> -->
+<!-- 					</div> -->
 
-					<div class="comment-form-wrap pt-5">
+					<div class="comment-form-wrap pt-5" id="replyForm">
 						<h3 class="mb-5">Leave a comment</h3>
-						<form action="#" class="p-5 bg-light">
-							<div class="form-group">
-								<label for="name">Name *</label> <input type="text"
-									class="form-control" id="name">
+						<form action="#" id="replyForm">
+						<div class="container-fluid" style="padding-left: 0px;">
+							<div class="row" style="height: 60px;">
+								<div class="form-group col-md-10">
+									<input type="text" class="form-control" id="replytext"
+										placeholder="내용을 입력하세요.">
+								</div>
+								<div class="form-group col-md-1">
+									<input type="button" value="댓글 등록" id="replyInsertBtn"
+										class="btn py-3 px-4 btn-primary" style="border: none;">
+								</div>
+							
 							</div>
-							<div class="form-group">
-								<label for="email">Email *</label> <input type="email"
-									class="form-control" id="email">
-							</div>
-							<div class="form-group">
-								<label for="website">Website</label> <input type="url"
-									class="form-control" id="website">
-							</div>
-
-							<div class="form-group">
-								<label for="message">Message</label>
-								<textarea name="" id="message" cols="30" rows="10"
-									class="form-control"></textarea>
-							</div>
-							<div class="form-group">
-								<input type="submit" value="Post Comment"
-									class="btn py-3 px-4 btn-primary">
-							</div>
-
+						</div>
 						</form>
 					</div>
 				</div>
