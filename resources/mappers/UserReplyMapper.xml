@@ -18,9 +18,9 @@
 	</insert>
 	
 	<insert id="insertUserReReply">
-		insert into tbl_userreply(rno, bno, replytext, replyer, rgroup, rseq, rlevel)
+		insert into tbl_userreply(rno, bno, replytext, replyer, rgroup, rseq, rlevel, parentreplyer)
 		values (seq_userreply_rno.nextval, #{bno}, #{replytext}, #{replyer}, 
-				#{rgroup}, #{rseq}, 1)
+				#{rgroup}, #{rseq}, 1, #{parentreplyer})
 	</insert>
 	
 	<select id="getMaxRseq" resultType="int">
@@ -34,5 +34,20 @@
 		where bno = #{bno}
 	</select>
 	
+	<select id="getRgroup" resultType="int">
+		select rgroup from tbl_userreply
+		where rno = #{rno}
+	</select>
+	
+	<update id="deleteReply">
+		update tbl_userreply
+		set delete_yn = 'Y'
+		where rno = #{rno}
+	</update>
+	
+	<select id="hasChildReply" resultType="int">
+		select count(*) from tbl_userreply
+		where rgroup = #{rno}
+	</select>
 	
 </mapper>

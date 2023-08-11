@@ -31,4 +31,16 @@ public class UserReplyService {
 		return userReplyDao.getReplycnt(bno);
 	}
 	
+	public int getRgroup(int rno) {
+		return userReplyDao.getRgroup(rno);
+	}
+	
+	public void deleteReply(int rno) {
+		userReplyDao.deleteReply(rno);
+	}
+	
+	public boolean hasChildReply(int rno) {
+		return userReplyDao.hasChildReply(rno);
+	}
+	
 }

@@ -23,5 +23,5 @@ public class UserReplyVo {
 	private int rseq;
 	private int rlevel;
 	private String delete_yn;
-	
+	private String parentreplyer;
 }

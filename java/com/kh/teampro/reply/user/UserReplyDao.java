@@ -40,4 +40,18 @@ public class UserReplyDao {
 	public int getReplycnt(int bno) {
 		return sqlSession.selectOne(NAMESPACE + "getReplycnt", bno);
 	}
+	
+	public int getRgroup(int rno) {
+		return sqlSession.selectOne(NAMESPACE + "getRgroup", rno);
+	}
+	
+	public void deleteReply(int rno) {
+		sqlSession.update(NAMESPACE + "deleteReply", rno);
+	}
+	
+	public boolean hasChildReply(int rno) {
+		int childCnt = sqlSession.selectOne(NAMESPACE + "hasChildReply", rno);
+		if (childCnt > 1) return true;
+		else return false;
+	}
 }

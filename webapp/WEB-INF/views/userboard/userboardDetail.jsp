@@ -3,10 +3,11 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ include file="/WEB-INF/views/include/header.jsp" %>
 <!-- Bootstrap4 설정 추가 -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+
 <!-- toastr 추가 -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.css" integrity="sha512-3pIirOrwegjM6erE5gPSwkUzO+3cTjpnV9lexlNZqvupR64iZBnOOTiiLPb9M36zpMScbmUNIcHUqKD47M719g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -166,11 +167,13 @@ $(function() {
 		$.get("/userReply/list?bno=" + bno, function(rData) {
 			$(".replyElem").remove();
 			$.each(rData, function(i, item) {
+				
 				let reply = null;
-				if (rData[i].rlevel == 1)
-					reply = $("#reReplyUl").clone(); // rlevel이 1인 경우 들여쓰기 처리
-				else 
+				if (rData[i].rlevel == 1) {
+					reply = $("#replyUl").clone(); // rlevel이 1인 경우 들여쓰기 처리
+				} else {
 					reply = $("#replyLi").clone();
+				} 
 				
 				reply.removeAttr("id").addClass("replyElem");
 				
@@ -179,51 +182,101 @@ $(function() {
 				
 				// 작성일 또는 수정일이 오늘 날짜인 경우 시간으로 출력, 그렇지 않은 경우 날짜로 출력
 				if (isSameDate(rData[i].regdate)) {
-					div.find("div").text(getTime(rData[i].regdate));
+					div.find("div").eq(0).text(getTime(rData[i].regdate));
 				} else { 
-					div.find("div").text(getDate(rData[i].regdate));
+					div.find("div").eq(0).text(getDate(rData[i].regdate));
 				}
-				div.find("p").eq(0).text(rData[i].replytext);
+				
+				if (rData[i].parentreplyer != null) {
+					const span = div.find("span").eq(0);
+					span.show();
+					span.text("@" + rData[i].parentreplyer + " ");
+				}
+				div.find("span").eq(1).text(rData[i].replytext);
+				div.find("p > a").attr("data-rno", rData[i].rno);
+				
+				if (rData[i].delete_yn == "Y") {
+					$.get("/userReply/checkDelete/" + rData[i].rno, function(hasChildReply) {
+						if (hasChildReply) {
+							div.find("span").eq(1).text("삭제된 댓글입니다.");
+							div.find("p").remove();
+							div.find("div").eq(0).remove();
+							div.find("h3").remove();
+							div.prev().find("img").remove();
+						} else {
+// 							reply.remove();
+						}
+					});
+				} 
 				
 				reply.show();
 				
-				$("#replyUl").append(reply);
+				$("#replyList").append(reply);
+				
 			});
 		});
 	}
 	
 	getReplyList();
 	
-	// 새 댓글 쓰기
+	// 새댓글 쓰기
 	$("#replyInsertBtn").click(function() {
 		const replytext = $("#replytext").val().trim();
-		if (replytext != null) {
-			const sData = {
-					"bno" : bno,
-					"replytext" : $("#replytext").val(),
-					"rlevel" : 0
-			};
-			$.post("/userReply/insert", sData, function(rData) {
-				if (rData == "SUCCESS") getReplyList();
-			});
-		}
+		insertReply(replytext, 0, 0, null);
+		$("#replytext").val("");
 	});
 	
 	// 대댓글 쓰기
-	$("#replyUl").on("click", ".reply", function(e) {
+	$("#replyUl").on("click", "#replyInsertBtn", function() {
+		const replyInput = $(this).parent().prev().find("input");
+		const replytext = replyInput.val().trim();
+		const rno = $(this).closest("p").find("a").attr("data-rno");
+		const replyer = $(this).closest("p").find("a").attr("data-replyer");
+		const parentreplyer = $(this).closest("li").find("h3").text();
+		insertReply(replytext, 1, rno, parentreplyer);
+		replyInput.val("");
+	});
+	
+	// 댓글 입력하기 - 공통 부분 함수
+	function insertReply(replytext, rlevel, rno, parentreplyer) {
+		if (replytext != "") {
+			const sData = {
+					"bno" : bno,
+					"replytext" : replytext,
+					"rlevel" : rlevel,
+					"rno" : rno,
+					"parentreplyer" : parentreplyer
+			};
+			$.post("/userReply/insert", sData, function(rData) {
+				getReplyList();
+			});
+		}
+	}
+	
+	// 대댓글창 열기
+	$("#replyList").on("click", ".replyBtn", function(e) {
 		e.preventDefault();
-		const replyForm = $("#replyForm2").clone();
-		replyForm.attr("style", "margin-top: 15px;");
-		replyForm.a
-		$(this).parent().append(replyForm);
-// 		const sData = {
-// 				"bno" : bno,
-// 				"replytext" : $("#replytext").val(),
-// 				"rlevel" : 0
-// 		};
-// 		$.post("/userReply/insert", sData, function(rData) {
-// 			if (rData == "SUCCESS") getReplyList();
-// 		});
+			$("#replyFormCopy").remove();
+			const replyForm = $("#replyForm").clone();
+			replyForm.attr("style", "margin-top: 15px;");
+			replyForm.attr("id", "replyFormCopy");
+			replyForm.find("input").eq(1).attr("data-type", "reReply");
+			$(this).parent().append(replyForm);
+	});
+	
+	// 댓글 삭제
+	$("#replyList").on("click", ".deleteReply", function(e) {
+		e.preventDefault();
+		const rno = $(this).attr("data-rno");
+		$.ajax({
+			"type" : "patch",
+			"url" : "/userReply/delete",
+			"data" : rno,
+			"success" : function(rData) {
+				getReplyList();
+			}
+		});
+		
 	});
 });
 </script>
@@ -302,23 +355,9 @@ $(function() {
 					<h3 class="mb-5">${userBoardVo.replycnt} Comments</h3>
 					
 					<!-- 댓글목록 -->
-					<ul class="comment-list" id="replyUl" style="padding: 0px, 0px, 0px, 40px;">
-						<li class="comment" id="replyLi" style="display: none;"/>
-							<div class="vcard bio">
-								<img src="/resources/images/person_1.jpg"
-									alt="Image placeholder">
-							</div>
-							<div class="comment-body">
-								<h3>작성자</h3>
-								<div class="meta" style="text-align: right;">날짜</div>
-								<p>내용</p>
-								<p>
-									<a href="hi" class="reply">Reply</a>
-								</p><br>
-							</div>
-						</li>
-						<ul class="children" id="reReplyUl" style="display: none;">
-							<li class="comment"/>
+					<ul class="comment-list" id="replyList" style="padding: 0px, 0px, 0px, 40px;">
+						<ul class="children" id="replyUl" style="display: none;">
+							<li class="comment" id="replyLi"/>
 								<div class="vcard bio">
 									<img src="/resources/images/person_1.jpg"
 										alt="Image placeholder">
@@ -326,9 +365,12 @@ $(function() {
 								<div class="comment-body">
 									<h3>작성자</h3>
 									<div class="meta" style="text-align: right;">날짜</div>
-									<p>내용</p>
-									<p>
-										<a href="#" class="reply">Reply</a>
+									<span style="font-weight: bold; display: none;">@원댓글작성자</span>
+									<span>내용</span>
+									<p style="text-align: right;">
+										<a href="#" class="reply updateReply">수정</a>
+										<a href="#" class="reply deleteReply">삭제</a>
+										<a href="#" class="reply replyBtn">답댓글</a>
 									</p><br>
 								</div>
 							</li>
@@ -336,36 +378,22 @@ $(function() {
 					</ul>
 					
 					<!-- 댓글쓰기 -->
-<!-- 					<div class="comment-form-wrap pt-5" id="replyForm"> -->
-<!-- 						<h3 class="mb-5">Leave a comment</h3> -->
-<!-- 						<form action="#" class="p-5 bg-light" id="replyForm2"> -->
-<!-- 							<div class="form-group"> -->
-<!-- 								<input type="text" class="form-control" id="replytext" -->
-<!-- 									placeholder="내용을 입력하세요."> -->
-<!-- 							</div> -->
-<!-- 							<div class="form-group"> -->
-<!-- 								<input type="button" value="댓글 등록" id="replyInsertBtn" -->
-<!-- 									class="btn py-3 px-4 btn-primary" style="border: none;"> -->
-<!-- 							</div> -->
-<!-- 						</form> -->
-<!-- 					</div> -->
-
-					<div class="comment-form-wrap pt-5" id="replyForm">
+					<div class="comment-form-wrap pt-5">
 						<h3 class="mb-5">Leave a comment</h3>
 						<form action="#" id="replyForm">
-						<div class="container-fluid" style="padding-left: 0px;">
-							<div class="row" style="height: 60px;">
-								<div class="form-group col-md-10">
-									<input type="text" class="form-control" id="replytext"
-										placeholder="내용을 입력하세요.">
+							<div class="container-fluid" style="padding-left: 0px;">
+								<div class="row" style="height: 60px;">
+									<div class="form-group col-md-10">
+										<input type="text" class="form-control" id="replytext"
+											placeholder="내용을 입력하세요.">
+									</div>
+									<div class="form-group col-md-1">
+										<input type="button" value="댓글 쓰기" id="replyInsertBtn"
+											class="btn py-3 px-4 btn-primary" style="border: none;"
+											data-type="newReply">
+									</div>
 								</div>
-								<div class="form-group col-md-1">
-									<input type="button" value="댓글 등록" id="replyInsertBtn"
-										class="btn py-3 px-4 btn-primary" style="border: none;">
-								</div>
-							
 							</div>
-						</div>
 						</form>
 					</div>
 				</div>
