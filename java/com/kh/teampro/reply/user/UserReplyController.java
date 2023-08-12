@@ -52,5 +52,12 @@ public class UserReplyController {
 		return userReplyService.hasChildReply(Integer.valueOf(rno));
 	}
 	
+	@RequestMapping(value = "/update", method = RequestMethod.PATCH)
+	public String updateUserReply(@RequestBody UserReplyVo userReplyVo) {
+		userReplyService.updateUserReply(userReplyVo);
+		return MyConstants.SUCCESS_MESSAGE;
+	}
+	
+	
 	
 }

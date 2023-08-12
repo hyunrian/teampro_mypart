@@ -51,7 +51,11 @@ public class UserReplyDao {
 	
 	public boolean hasChildReply(int rno) {
 		int childCnt = sqlSession.selectOne(NAMESPACE + "hasChildReply", rno);
-		if (childCnt > 1) return true;
+		if (childCnt > 0) return true;
 		else return false;
+	}
+	
+	public void updateUserReply(UserReplyVo userReplyVo) {
+		sqlSession.update(NAMESPACE + "updateUserReply", userReplyVo);
 	}
 }

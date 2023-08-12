@@ -159,60 +159,86 @@ $(function() {
 // 		}
 		
 	});
+	function hasChildReply(rno) {
+		$.get("/userReply/checkDelete/" + rno, function(hasReply) {
+			if (hasReply == "true") {
+				return true;
+			} else {
+				return false;
+			}
+		});
+	}
 	
+	// 댓글창 열기
+	$("#replyOpen").click(function() {
+		$(this).parent().next().fadeToggle(200);
+	});
 	
 	// 댓글 가져오기
 	function getReplyList() {
 		
 		$.get("/userReply/list?bno=" + bno, function(rData) {
-			$(".replyElem").remove();
 			$.each(rData, function(i, item) {
+				$(".replyElem").remove();
 				
-				let reply = null;
-				if (rData[i].rlevel == 1) {
-					reply = $("#replyUl").clone(); // rlevel이 1인 경우 들여쓰기 처리
-				} else {
-					reply = $("#replyLi").clone();
-				} 
-				
-				reply.removeAttr("id").addClass("replyElem");
-				
-				const div = reply.find("div").eq(1);
-				div.find("h3").text(rData[i].replyer);
-				
-				// 작성일 또는 수정일이 오늘 날짜인 경우 시간으로 출력, 그렇지 않은 경우 날짜로 출력
-				if (isSameDate(rData[i].regdate)) {
-					div.find("div").eq(0).text(getTime(rData[i].regdate));
-				} else { 
-					div.find("div").eq(0).text(getDate(rData[i].regdate));
-				}
-				
-				if (rData[i].parentreplyer != null) {
-					const span = div.find("span").eq(0);
-					span.show();
-					span.text("@" + rData[i].parentreplyer + " ");
-				}
-				div.find("span").eq(1).text(rData[i].replytext);
-				div.find("p > a").attr("data-rno", rData[i].rno);
-				
-				if (rData[i].delete_yn == "Y") {
-					$.get("/userReply/checkDelete/" + rData[i].rno, function(hasChildReply) {
-						if (hasChildReply) {
-							div.find("span").eq(1).text("삭제된 댓글입니다.");
-							div.find("p").remove();
-							div.find("div").eq(0).remove();
-							div.find("h3").remove();
-							div.prev().find("img").remove();
-						} else {
-// 							reply.remove();
-						}
-					});
-				} 
-				
-				reply.show();
-				
-				$("#replyList").append(reply);
-				
+				var status = "default"; // 삭제처리되지 않은 댓글
+				$.get("/userReply/checkDelete/" + rData[i].rno, function(hasReply) {
+					if (rData[i].delete_yn == "Y" && hasReply) { // 삭제처리되었지만 대댓글이 있는 경우
+						status = "deleted";
+					} else if (rData[i].delete_yn == "Y" && !hasReply) { // 삭제처리되었으며 대댓글이 없는 경우
+						console.log(rData[i]);
+						status = "skip";
+					}
+				});
+				setTimeout(function() {
+					if (status == "default" || status == "deleted") {
+						let reply = null;
+		 				if (rData[i].rlevel == 1) {
+		 					reply = $("#replyUl").clone(); // rlevel이 1인 경우 들여쓰기 처리
+		 				} else {
+		 					reply = $("#replyLi").clone();
+		 				} 
+						
+		 				reply.removeAttr("id").addClass("replyElem");
+						
+		 				const div = reply.find("div").eq(1);
+		 				div.find("h3").text(rData[i].replyer);
+						
+		 				// 작성일 또는 수정일이 오늘 날짜인 경우 시간으로 출력, 그렇지 않은 경우 날짜로 출력
+		 				const dateDiv = div.find("div").eq(0);
+		 				if (rData[i].updatedate != null) {
+			 				if (isSameDate(rData[i].updatedate)) {
+			 					dateDiv.text(getTime(rData[i].updatedate));
+			 				} else { 
+			 					dateDiv.text(getDate(rData[i].updatedate));
+			 				}
+		 				} else {
+			 				if (isSameDate(rData[i].regdate)) {
+			 					dateDiv.text(getTime(rData[i].regdate));
+			 				} else { 
+			 					dateDiv.text(getDate(rData[i].regdate));
+			 				}
+		 				}
+						
+		 				if (rData[i].parentreplyer != null) {
+		 					const span = div.find("span").eq(0);
+		 					span.show();
+		 					span.text("@" + rData[i].parentreplyer + " ");
+		 				}
+		 				div.find("span").eq(1).text(rData[i].replytext);
+		 				div.find("p > a").attr("data-rno", rData[i].rno);
+						
+	 					if (status == "deleted") {
+	 						div.find("span").eq(1).text("삭제된 댓글입니다.");
+	 						div.find("p").hide();
+	 						div.find("div").eq(0).remove();
+	 						div.find("h3").remove();
+	 						div.prev().find("img").remove();
+	 					}
+		 				reply.show();
+		 				$("#replyList").append(reply);
+					} 
+				}, 600); // 비동기처리에 시간이 걸려 조건에 따른 status 설정이 늦어져 일정 시간 이후 처리를 해야 삭제처리된 댓글이 보이지 않음
 			});
 		});
 	}
@@ -227,7 +253,7 @@ $(function() {
 	});
 	
 	// 대댓글 쓰기
-	$("#replyUl").on("click", "#replyInsertBtn", function() {
+	$("#replyList").on("click", "#replyInsertBtn", function() {
 		const replyInput = $(this).parent().prev().find("input");
 		const replytext = replyInput.val().trim();
 		const rno = $(this).closest("p").find("a").attr("data-rno");
@@ -258,7 +284,6 @@ $(function() {
 		e.preventDefault();
 			$("#replyFormCopy").remove();
 			const replyForm = $("#replyForm").clone();
-			replyForm.attr("style", "margin-top: 15px;");
 			replyForm.attr("id", "replyFormCopy");
 			replyForm.find("input").eq(1).attr("data-type", "reReply");
 			$(this).parent().append(replyForm);
@@ -276,8 +301,46 @@ $(function() {
 				getReplyList();
 			}
 		});
-		
 	});
+	
+	// 댓글 수정창 열기
+	$("#replyList").on("click", ".updateReply", function(e) {
+		e.preventDefault();
+		const element = $(this).closest(".replyElem");
+		const replyForm = $("#replyForm").clone();
+		replyForm.attr("style", "margin-top: 30px; margin-bottom: 80px;");
+		const replytext = element.find("span").eq(1).text();
+		replyForm.find("#replytext").val(replytext);
+		const rno = $(this).attr("data-rno");
+		replyForm.find("#replyInsertBtn").hide();		
+		replyForm.find("#replyUpdateBtn").show().attr("data-rno", rno);
+		element.find("div").hide();
+		element.append(replyForm);
+	});
+	
+	// 댓글 수정
+	$("#replyList").on("click", "#replyUpdateBtn", function() {
+		const that = $(this);
+		const replytext = $(this).parent().prev().find("input").val();
+		const sData = {
+				"rno" : $(this).attr("data-rno"),
+				"replytext" : replytext
+		};
+		$.ajax ({
+			"type" : "patch",
+			"url" : "/userReply/update",
+			"contentType" : "application/json",
+			"data" : JSON.stringify(sData),
+			"success" : function(rData) {
+				const element = that.closest(".replyElem");
+				element.find("span").eq(1).text(replytext);
+				element.find("div").show();
+				element.find("#replyForm").remove();
+			}
+		});
+	});
+	
+	
 });
 </script>
 <%@ include file="/WEB-INF/views/include/menu.jsp" %>
@@ -351,7 +414,7 @@ $(function() {
 						style="font-size: 10pt; margin-top: 100px; cursor: pointer;">댓글 보기</a>
 				</div>
 <!-- 				<div class="pt-5 mt-5" style="display:none;"> -->
-				<div class="pt-5 mt-5">
+				<div class="pt-5 mt-5" style="display:none;">
 					<h3 class="mb-5">${userBoardVo.replycnt} Comments</h3>
 					
 					<!-- 댓글목록 -->
@@ -380,7 +443,7 @@ $(function() {
 					<!-- 댓글쓰기 -->
 					<div class="comment-form-wrap pt-5">
 						<h3 class="mb-5">Leave a comment</h3>
-						<form action="#" id="replyForm">
+						<form action="#" id="replyForm" style="margin-top: 40px;">
 							<div class="container-fluid" style="padding-left: 0px;">
 								<div class="row" style="height: 60px;">
 									<div class="form-group col-md-10">
@@ -390,6 +453,9 @@ $(function() {
 									<div class="form-group col-md-1">
 										<input type="button" value="댓글 쓰기" id="replyInsertBtn"
 											class="btn py-3 px-4 btn-primary" style="border: none;"
+											data-type="newReply">
+										<input type="button" value="댓글 수정" id="replyUpdateBtn"
+											class="btn py-3 px-4 btn-primary" style="border: none; display: none;"
 											data-type="newReply">
 									</div>
 								</div>

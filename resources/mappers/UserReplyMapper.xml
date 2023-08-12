@@ -18,7 +18,8 @@
 	</insert>
 	
 	<insert id="insertUserReReply">
-		insert into tbl_userreply(rno, bno, replytext, replyer, rgroup, rseq, rlevel, parentreplyer)
+		insert into tbl_userreply(
+				rno, bno, replytext, replyer, rgroup, rseq, rlevel, parentreplyer)
 		values (seq_userreply_rno.nextval, #{bno}, #{replytext}, #{replyer}, 
 				#{rgroup}, #{rseq}, 1, #{parentreplyer})
 	</insert>
@@ -32,6 +33,7 @@
 	<select id="getReplycnt" resultType="int">
 		select count(*) from tbl_userreply
 		where bno = #{bno}
+		and delete_yn = 'N'
 	</select>
 	
 	<select id="getRgroup" resultType="int">
@@ -48,6 +50,14 @@
 	<select id="hasChildReply" resultType="int">
 		select count(*) from tbl_userreply
 		where rgroup = #{rno}
+		and delete_yn = 'N'
 	</select>
+	
+	<update id="updateUserReply">
+		update tbl_userreply
+		set replytext = #{replytext},
+		    updatedate = sysdate
+		where rno = #{rno}
+	</update>
 	
 </mapper>

@@ -43,4 +43,8 @@ public class UserReplyService {
 		return userReplyDao.hasChildReply(rno);
 	}
 	
+	public void updateUserReply(UserReplyVo userReplyVo) {
+		userReplyDao.updateUserReply(userReplyVo);
+	}
+	
 }
