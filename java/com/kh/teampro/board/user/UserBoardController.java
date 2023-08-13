@@ -33,7 +33,10 @@ public class UserBoardController {
 		List<UserBoardVo> list = userBoardService.getUserArticleList();
 		for (UserBoardVo userBoardVo : list) {
 			int replycnt = userReplyService.getReplycnt(userBoardVo.getBno());
+			int likecnt = likeUserBoardService.countLikes(userBoardVo.getBno());
+			userBoardVo.setLikecnt(likecnt);
 			userBoardVo.setReplycnt(replycnt);
+			// 댓글 개수, 조회수, 좋아요 수 db에 저장할지 안할지 정해야 함
 		}
 		model.addAttribute("userArticleList", list);
 		
@@ -43,12 +46,14 @@ public class UserBoardController {
 	// 게시글 쓰기
 	@RequestMapping(value = "/write", method = RequestMethod.GET)
 	public String writeArticle() {
-		return "userboard/userArticleRegister";
+		return "userboard/userboardWrite";
 	}
 	
 	// 유저 게시글 내용 보기
 	@RequestMapping(value = "/detail", method = RequestMethod.GET)
 	public String getDetail(int bno, Model model) {
+		
+		userBoardService.addViewcnt(bno);
 
 		UserBoardVo userBoardVo = userBoardService.getUserArticleDetail(bno);
 		int replycnt = userReplyService.getReplycnt(bno);

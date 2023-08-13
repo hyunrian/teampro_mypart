@@ -2,8 +2,9 @@
 	pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ include file="/WEB-INF/views/include/header.jsp" %>
+
 <!-- Bootstrap4 설정 추가 -->
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.slim.min.js"></script>
+<!-- <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.slim.min.js"></script> -->
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
@@ -12,6 +13,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.css" integrity="sha512-3pIirOrwegjM6erE5gPSwkUzO+3cTjpnV9lexlNZqvupR64iZBnOOTiiLPb9M36zpMScbmUNIcHUqKD47M719g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" integrity="sha512-VEd+nq25CkR676O+pLBnDW09R7VQX9Mdiij052gVCp5yVH3jGtH70Ho/UUv4mJDsEdTvqRCFZg0NKGiojGnUCw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
 <script>
 toastr.options = {
 	"closeButton": false,
@@ -74,6 +76,9 @@ toastr.options = {
 		padding-top: 0px;
 	}
 
+	.boardMenu {
+		margin-right: 18px;
+	}
 </style>
 <script>
 $(function() {
@@ -282,9 +287,11 @@ $(function() {
 	// 대댓글창 열기
 	$("#replyList").on("click", ".replyBtn", function(e) {
 		e.preventDefault();
-			$("#replyFormCopy").remove();
+			$(".replyForm").remove();
+			$(".replyElem").find("div").show();
 			const replyForm = $("#replyForm").clone();
-			replyForm.attr("id", "replyFormCopy");
+// 			replyForm.attr("id", "replyFormCopy");
+			replyForm.addClass("replyForm");
 			replyForm.find("input").eq(1).attr("data-type", "reReply");
 			$(this).parent().append(replyForm);
 	});
@@ -292,13 +299,14 @@ $(function() {
 	// 댓글 삭제
 	$("#replyList").on("click", ".deleteReply", function(e) {
 		e.preventDefault();
-		const rno = $(this).attr("data-rno");
+		const that = $(this);
+		const rno = that.attr("data-rno");
 		$.ajax({
 			"type" : "patch",
 			"url" : "/userReply/delete",
 			"data" : rno,
 			"success" : function(rData) {
-				getReplyList();
+				that.closest(".replyElem").hide();
 			}
 		});
 	});
@@ -306,8 +314,13 @@ $(function() {
 	// 댓글 수정창 열기
 	$("#replyList").on("click", ".updateReply", function(e) {
 		e.preventDefault();
+// 		$("#updateFormCopy").remove();
+		$(".replyForm").remove();
+		$(".replyElem").find("div").show();
 		const element = $(this).closest(".replyElem");
 		const replyForm = $("#replyForm").clone();
+		replyForm.addClass("replyForm");
+// 		replyForm.attr("id", "updateFormCopy");
 		replyForm.attr("style", "margin-top: 30px; margin-bottom: 80px;");
 		const replytext = element.find("span").eq(1).text();
 		replyForm.find("#replytext").val(replytext);
@@ -321,7 +334,7 @@ $(function() {
 	// 댓글 수정
 	$("#replyList").on("click", "#replyUpdateBtn", function() {
 		const that = $(this);
-		const replytext = $(this).parent().prev().find("input").val();
+		const replytext = $(this).parent().prev().find("input").val().trim();
 		const sData = {
 				"rno" : $(this).attr("data-rno"),
 				"replytext" : replytext
@@ -335,7 +348,8 @@ $(function() {
 				const element = that.closest(".replyElem");
 				element.find("span").eq(1).text(replytext);
 				element.find("div").show();
-				element.find("#replyForm").remove();
+				element.find(".replyForm").remove();
+				element.find("div").eq(1).find("div").text(getTime(new Date()));
 			}
 		});
 	});
@@ -344,24 +358,6 @@ $(function() {
 });
 </script>
 <%@ include file="/WEB-INF/views/include/menu.jsp" %>
-	
-<div class="hero-wrap js-fullheight"
-	style="background-image: url('/resources/images/bg_4.jpg');">
-	<div class="overlay"></div>
-	<div class="container">
-		<div
-			class="row no-gutters slider-text js-fullheight align-items-center justify-content-center"
-			data-scrollax-parent="true">
-			<div class="col-md-9 ftco-animate text-center"
-				data-scrollax=" properties: { translateY: '70%' }">
-				
-				<h1 class="mb-3 bread"
-					data-scrollax="properties: { translateY: '30%', opacity: 1.6 }">Tips
-					&amp; Articles</h1>
-			</div>
-		</div>
-	</div>
-</div>
 
 <div id="pageBegin"></div><br><br>
 <section class="ftco-section ftco-degree-bg">
@@ -374,8 +370,10 @@ $(function() {
 					<span> <i class="fa-solid fa-umbrella-beach"
 						style="color: #2667cf; font-size: 2rem;"></i> &nbsp;&nbsp;
 					</span>
-					<span style="font-size: 14pt;">${userBoardVo.writer} &nbsp;&nbsp;&nbsp;</span>
-					<span style="font-size: 10pt;" id="dateSpan">${userBoardVo.regdate}</span>
+					<span style="font-size: 14pt;" class="boardMenu">${userBoardVo.writer}</span>
+					<span style="font-size: 10pt;" id="dateSpan" class="boardMenu">${userBoardVo.regdate}</span>
+					<span style="font-size: 10pt;" class="boardMenu"><a href="#">수정</a></span>
+					<span style="font-size: 10pt;" class="boardMenu"><a href="#">삭제</a></span>
 				</div>
 				<br>
 				<br>
@@ -412,6 +410,9 @@ $(function() {
 				<div class="tagcloud">
 					<a id="replyOpen" class="tag-cloud-link" 
 						style="font-size: 10pt; margin-top: 100px; cursor: pointer;">댓글 보기</a>
+					<a id="replyClose" class="tag-cloud-link" 
+						style="font-size: 10pt; margin-top: 100px; 
+						cursor: pointer; display: none;">댓글 닫기</a>
 				</div>
 <!-- 				<div class="pt-5 mt-5" style="display:none;"> -->
 				<div class="pt-5 mt-5" style="display:none;">
