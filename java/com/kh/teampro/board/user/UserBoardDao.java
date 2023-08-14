@@ -25,5 +25,13 @@ public class UserBoardDao {
 	public void addViewcnt(int bno) {
 		sqlSession.update(NAMESPACE + "addViewcnt", bno);
 	}
+	
+	public void createArticle(UserBoardVo userBoardVo) {
+		sqlSession.insert(NAMESPACE + "createArticle", userBoardVo);
+	}
+	
+	public int getNextSeq() {
+		return sqlSession.selectOne(NAMESPACE + "getNextSeq");
+	}
 
 }
