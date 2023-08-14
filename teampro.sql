@@ -274,3 +274,50 @@ set viewcnt = viewcnt + 1
 where bno = 2;
 
 commit;
+
+-- 여기부터 다시
+
+create table tbl_userreply(
+    rno number primary key,
+    bno number references tbl_userboard(bno),
+    replytext varchar2(1000) not null,
+    replyer varchar2(50) references tbl_user(unickname),
+    regdate timestamp default sysdate,
+    updatedate timestamp,
+    rgroup number not null,
+    rseq number not null,
+    rlevel number not null,
+    delete_yn char(1) default 'N',
+    parentreplyer varchar2(50) references tbl_user(unickname)
+);
+
+create sequence seq_userreply_rno;
+
+alter table tbl_userreply
+add parentreplyer varchar2(50) references tbl_user(unickname);
+
+commit;
+
+select * from tbl_userreply;
+
+-- user 추가
+insert into tbl_user(userid, upw, unickname, uemail)
+values ('user2', '1234', 'star', 'star@mail.com');
+
+-- userboard에 컬럼 추가
+alter table tbl_userboard
+add userid varchar2(15) not null references tbl_user(userid);
+
+-- 댓글테이블에 컬럼 추가
+alter table tbl_userreply
+add userid varchar2(15) not null references tbl_user(userid);
+
+
+select * from tbl_userboard
+		order by regdate desc;
+
+select * from all_sequences
+where sequence_owner = 'TEAMPRO';
+
+select seq_board_bno.nextval
+from dual;
