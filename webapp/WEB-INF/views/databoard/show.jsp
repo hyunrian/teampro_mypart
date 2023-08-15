@@ -1,11 +1,20 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<%@ include file="/WEB-INF/views/include/header.jsp" %>
+<%@ include file="/WEB-INF/views/include/header.jsp"%>
+<style>
+.row d-flex{
+  padding: 10px;
+  border-bottom: 1px solid #fff;
+}
 
+.textBold {
+  font-weight: bold;  
+}
+</style>
 <body>
 	<!-- menu -->
-	<%@ include file="/WEB-INF/views/include/menu.jsp" %>
+	<%@ include file="/WEB-INF/views/include/menu.jsp"%>
 	<!-- END menu -->
 
 	<div class="hero-wrap js-fullheight"
@@ -30,36 +39,37 @@
 	</div>
 
 
-	<section class="ftco-section bg-light">
+
+	<section>
 		<div class="container">
-			<div class="row d-flex">
-				<c:forEach items="${foodList}" var="foodVo">
-					<div class="col-md-3 d-flex ftco-animate">
-						<div class="blog-entry align-self-stretch">
-							<a href="/databoard/getFoodInfo?bno=${foodVo.bno}" class="block-20"
-								style="background-image: url('${foodVo.thumbimage}');"> </a>
-							<div class="text p-4 d-block">
-								<h3 class="heading mt-3">
-									<a href="/databoard/getFoodInfo?bno=${foodVo.bno}">${foodVo.rname}</a><br>
-									<a href="#" class="meta-chat"><span class="icon-chat"></span>${foodVo.replycnt}</a>
-								</h3>
-								<span class="tag">${foodVo.address}</span>
-								<div class="meta mb-3">
-									<div>
-										<a href="#">Tel. ${foodVo.rnumber}</a>
-									</div>
-									<div>
-										<a href="#">Open. ${foodVo.openhours}</a>
-									</div>
-									<div>
-										<a href="#">${foodVo.menu}</a>
-									</div>
-								</div>
+			<c:forEach items="${showList}" var="showVo">
+				<div class="row d-flex" style="border-bottom:  1px solid #BDBDBD;">
+					<div class="text p-4 d-block">
+						<h4>
+							<b>${showVo.showname}</b><br>
+						</h4>
+						<div class="meta mb-3">
+							<div class="innerDiv">
+								<span class="textBold">전시장소&nbsp;&nbsp;</span>${showVo.placename}
+							</div>
+							<div class="innerDiv">
+								<span class="textBold">전시기간&nbsp;&nbsp;</span>${showVo.begindate} ~ ${showVo.enddate}
+							</div>
+							<div class="innerDiv">
+								<span class="textBold">오픈시간&nbsp;&nbsp;</span>${showVo.openhours}
+							</div>
+							<div class="innerDiv">
+								<span class="textBold">가격&nbsp;&nbsp;</span>${showVo.price}
+							</div>
+							<div class="innerDivLast">
+								<span class="textBold">홈페이지&nbsp;&nbsp; </span><a href="${showVo.url}" style="color: #5587ED">${showVo.url}</a>
 							</div>
 						</div>
 					</div>
-				</c:forEach>
-			</div>
+					<br>
+					<hr>
+				</div>
+			</c:forEach>
 
 			<div class="row mt-5">
 				<div class="col text-center">
@@ -88,4 +98,4 @@
 				stroke-width="4" stroke-miterlimit="10" stroke="#F96D00" /></svg>
 	</div>
 
-	<%@ include file="/WEB-INF/views/include/footer.jsp" %>
+	<%@ include file="/WEB-INF/views/include/footer.jsp"%>

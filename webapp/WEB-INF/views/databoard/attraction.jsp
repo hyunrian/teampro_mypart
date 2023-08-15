@@ -33,26 +33,23 @@
 	<section class="ftco-section bg-light">
 		<div class="container">
 			<div class="row d-flex">
-				<c:forEach items="${foodList}" var="foodVo">
+				<c:forEach items="${placeList}" var="placeVo">
 					<div class="col-md-3 d-flex ftco-animate">
 						<div class="blog-entry align-self-stretch">
-							<a href="/databoard/getFoodInfo?bno=${foodVo.bno}" class="block-20"
-								style="background-image: url('${foodVo.thumbimage}');"> </a>
+							<a href="blog-single.html" class="block-20"
+								style="background-image: url('${placeVo.thumbimage}');"> </a>
 							<div class="text p-4 d-block">
 								<h3 class="heading mt-3">
-									<a href="/databoard/getFoodInfo?bno=${foodVo.bno}">${foodVo.rname}</a><br>
-									<a href="#" class="meta-chat"><span class="icon-chat"></span>${foodVo.replycnt}</a>
+									<a href="#">${placeVo.aname}</a><br>
+									<a href="#" class="meta-chat"><span class="icon-chat"></span>${placeVo.replycnt}</a>
 								</h3>
-								<span class="tag">${foodVo.address}</span>
+								<span class="tag">${placeVo.address}</span>
 								<div class="meta mb-3">
 									<div>
-										<a href="#">Tel. ${foodVo.rnumber}</a>
+										<a href="#">Tel. ${placeVo.anumber}</a>
 									</div>
 									<div>
-										<a href="#">Open. ${foodVo.openhours}</a>
-									</div>
-									<div>
-										<a href="#">${foodVo.menu}</a>
+										<a href="#">Open. ${placeVo.openhours}</a>
 									</div>
 								</div>
 							</div>
