@@ -321,3 +321,8 @@ where sequence_owner = 'TEAMPRO';
 
 select seq_board_bno.nextval
 from dual;
+
+
+
+alter table tbl_userboard
+add delete_yn char(1) default 'N' not null;
