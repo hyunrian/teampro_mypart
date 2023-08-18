@@ -326,3 +326,7 @@ from dual;
 
 alter table tbl_userboard
 add delete_yn char(1) default 'N' not null;
+
+-- 8/18
+alter table tbl_userboard
+add updatedate timestamp;
